@@ -171,7 +171,7 @@ export function UserPage() {
         <button
           className={styles.logoutBtn}
           onClick={handleLogout}
-          alt="Desejar Sair?"
+          alt="Desejar sair?"
         >
           <RiLogoutBoxLine />
           Sair
