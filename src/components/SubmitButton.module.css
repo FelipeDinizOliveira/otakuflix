@@ -1,0 +1,15 @@
+.onSubmit {
+  background-color: #0f070768;
+
+  border: 1px solid var(--color-text);
+  font-size: 1.4rem;
+  border-radius: 1.4rem;
+  padding: 0.8rem 0rem;
+  font-weight: bold;
+}
+.onSubmit:hover {
+  cursor: pointer;
+  background: var(--accent-color);
+  border: 1px solid var(--accent-color);
+  transition: 0.4s;
+}

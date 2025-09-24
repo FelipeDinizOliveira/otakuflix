@@ -1,0 +1,28 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  text-decoration: none;
+}
+
+:root {
+  --font-main: "Noto Sans", sans-serif;
+  --color-main: #161519;
+  --color-text: #ffffff;
+  --accent-color: #ffba44;
+}
+
+body {
+  background-color: var(--color-main);
+}
+
+h1,
+h2,
+h3,
+h4,
+button,
+p,
+a {
+  color: var(--color-text);
+  font-family: var(--font-main);
+}

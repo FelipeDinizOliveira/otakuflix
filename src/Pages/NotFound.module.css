@@ -1,0 +1,19 @@
+.notFound {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 2rem;
+  padding: 2rem;
+  color: var(--accent-color);
+}
+
+.notFound h1 {
+  font-size: 3rem;
+  font-weight: bold;
+}
+a:hover {
+  color: var(--accent-color);
+}
