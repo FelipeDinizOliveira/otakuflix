@@ -65,7 +65,7 @@ export function UserPage() {
   // Busca mangas usando função serverless para evitar CORS
   const fetchMangas = async (title) => {
     try {
-      const response = await axios.get(serverlessUrl, {
+      const response = await axios.get("/api/manga", {
         params: { title, limit: 4 },
       });
 
