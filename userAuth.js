@@ -1,35 +1,93 @@
+import express from "express";
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
-import { User } from "./models/users.js";
+import jwt from "jsonwebtoken";
+import cors from "cors";
+import { User } from "./models/users.js"; // ajuste o caminho se necessário
+import dotenv from "dotenv";
 
-export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ msg: "Método não permitido" });
-  }
+dotenv.config();
 
-  const { name, email, password, confirmpassword } = req.body;
+const app = express();
+app.use(cors());
+app.use(express.json());
 
-  if (!name) return res.status(422).json({ msg: "O nome é obrigatório!" });
-  if (!email) return res.status(422).json({ msg: "O email é obrigatório!" });
-  if (!password) return res.status(422).json({ msg: "A senha é obrigatória!" });
-  if (password !== confirmpassword)
-    return res.status(422).json({ msg: "A senha não confere" });
-
-  if (!mongoose.connection.readyState) {
-    await mongoose.connect(process.env.MONGO_URI);
-  }
-
-  const userExists = await User.findOne({ email });
-  if (userExists) return res.status(422).json({ msg: "Usuário já existe" });
-
-  const salt = await bcrypt.genSalt(12);
-  const passwordHash = await bcrypt.hash(password, salt);
+// Middleware para verificar token
+function checkToken(req, res, next) {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+  if (!token) return res.status(401).json({ msg: "Acesso negado!" });
 
   try {
-    const user = new User({ name, email, password: passwordHash });
-    await user.save();
-    res.status(201).json({ msg: "Usuário criado com sucesso!" });
-  } catch (err) {
-    res.status(500).json({ msg: "Erro no servidor" });
+    jwt.verify(token, process.env.SECRET);
+    next();
+  } catch {
+    return res.status(400).json({ msg: "Token inválido!" });
   }
 }
+
+// Rotas
+app.get("/", (req, res) => res.status(200).json({ msg: "Iniciando API!" }));
+
+app.get("/user/:id", checkToken, async (req, res) => {
+  const user = await User.findById(req.params.id, "-password");
+  if (!user) return res.status(404).json({ msg: "Usuário não encontrado!" });
+  res.status(200).json({ user });
+});
+
+app.post("/auth/register", async (req, res) => {
+  const { name, email, password, confirmpassword } = req.body;
+  if (!name || !email || !password || password !== confirmpassword)
+    return res.status(422).json({ msg: "Dados inválidos!" });
+
+  if (!mongoose.connection.readyState)
+    await mongoose.connect(
+      `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.3rshl4g.mongodb.net/?retryWrites=true&w=majority`
+    );
+
+  const userExists = await User.findOne({ email });
+  if (userExists) return res.status(422).json({ msg: "Usuário já existe!" });
+
+  const passwordHash = await bcrypt.hash(password, 12);
+  const user = new User({ name, email, password: passwordHash });
+
+  try {
+    await user.save();
+    res.status(201).json({ msg: "Usuário criado com sucesso!" });
+  } catch {
+    res.status(500).json({ msg: "Erro no servidor!" });
+  }
+});
+
+app.post("/auth/login", async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) return res.status(422).json({ msg: "Dados inválidos!" });
+
+  if (!mongoose.connection.readyState)
+    await mongoose.connect(
+      `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.3rshl4g.mongodb.net/?retryWrites=true&w=majority`
+    );
+
+  const user = await User.findOne({ email });
+  if (!user) return res.status(422).json({ msg: "Usuário não encontrado!" });
+
+  const checkPassword = await bcrypt.compare(password, user.password);
+  if (!checkPassword) return res.status(401).json({ msg: "Senha inválida!" });
+
+  try {
+    const token = jwt.sign({ id: user._id }, process.env.SECRET);
+    res.status(200).json({ msg: "Autenticação realizada com sucesso!", token });
+  } catch {
+    res.status(500).json({ msg: "Erro no servidor!" });
+  }
+});
+
+// Porta do Railway
+const PORT = process.env.PORT || 3000;
+
+mongoose
+  .connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.3rshl4g.mongodb.net/?retryWrites=true&w=majority`)
+  .then(() => {
+    app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
+  })
+  .catch((err) => console.log("Erro ao conectar no MongoDB:", err));
