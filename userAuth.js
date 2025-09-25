@@ -60,7 +60,8 @@ app.post("/auth/register", async (req, res) => {
 
 app.post("/auth/login", async (req, res) => {
   const { email, password } = req.body;
-  if (!email || !password) return res.status(422).json({ msg: "Dados inválidos!" });
+  if (!email || !password)
+    return res.status(422).json({ msg: "Dados inválidos!" });
 
   try {
     const user = await User.findOne({ email });
@@ -81,7 +82,9 @@ app.post("/auth/login", async (req, res) => {
 const PORT = process.env.PORT || 3000;
 
 mongoose
-  .connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.3rshl4g.mongodb.net/?retryWrites=true&w=majority`)
+  .connect(
+    `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.3rshl4g.mongodb.net/?retryWrites=true&w=majority`
+  )
   .then(() => {
     app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
   })

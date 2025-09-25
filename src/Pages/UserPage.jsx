@@ -4,7 +4,6 @@ import axios from "axios";
 import styles from "../Pages/UserPage.module.css";
 import { RiLogoutBoxLine } from "react-icons/ri";
 import { IoCloseCircle } from "react-icons/io5";
-import background2 from "../assets/bacgroundpages2.jpg";
 
 export function UserPage() {
   const [user, setUser] = useState(null);
