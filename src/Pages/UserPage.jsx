@@ -17,12 +17,12 @@ export function UserPage() {
   const [currentChapterIndex, setCurrentChapterIndex] = useState(0);
   const [pages, setPages] = useState([]);
 
-  const apiUrl = "http://localhost:3000"; // seu backend de usuário
+  const apiUrl = "http://localhost:3000"; // backend de usuário
   const proxyMangas = "/api/mangas"; // proxy mangás
   const proxyChapters = "/api/manga-chapters"; // proxy capítulos
   const proxyPages = "/api/manga-pages"; // proxy páginas
 
-  // Dados do usuário JWT e rota /user/:id
+  // Dados do usuário JWT
   useEffect(() => {
     const fetchUser = async () => {
       const token = localStorage.getItem("token");
@@ -69,7 +69,10 @@ export function UserPage() {
     try {
       const response = await axios.get(proxyMangas, { params: { title } });
 
-      const mangasData = response.data.data.map((m) => {
+      // ⚠️ Checagem de segurança
+      const mangasArray = response.data?.data || [];
+
+      const mangasData = mangasArray.map((m) => {
         const coverRel = m.relationships.find((r) => r.type === "cover_art");
         const coverUrl = coverRel
           ? `https://uploads.mangadex.org/covers/${m.id}/${coverRel.attributes.fileName}.256.jpg`
@@ -126,14 +129,17 @@ export function UserPage() {
   const fetchChapters = async (mangaId) => {
     try {
       const response = await axios.get(`${proxyChapters}/${mangaId}`);
-      const chapterList = response.data.data.map((c) => ({
+      const chapterList = response.data?.data || [];
+
+      const formattedChapters = chapterList.map((c) => ({
         id: c.id,
         title: c.attributes.title || `Capítulo ${c.attributes.chapter}`,
         chapter: c.attributes.chapter,
       }));
 
-      setChapters(chapterList);
-      if (chapterList.length > 0) fetchPages(chapterList[0].id);
+      setChapters(formattedChapters);
+
+      if (formattedChapters.length > 0) fetchPages(formattedChapters[0].id);
     } catch (err) {
       console.error("Erro ao buscar capítulos:", err);
     }
@@ -142,9 +148,10 @@ export function UserPage() {
   const fetchPages = async (chapterId) => {
     try {
       const response = await axios.get(`${proxyPages}/${chapterId}`);
-      const baseUrlServer = response.data.baseUrl;
-      const hash = response.data.chapter.hash;
-      const data = response.data.chapter.data;
+      const baseUrlServer = response.data?.baseUrl;
+      const hash = response.data?.chapter?.hash;
+      const data = response.data?.chapter?.data || [];
+
       const fullUrls = data.map(
         (img) => `${baseUrlServer}/data/${hash}/${img}`
       );
@@ -162,11 +169,7 @@ export function UserPage() {
   return (
     <>
       <header className={styles.head}>
-        <button
-          className={styles.logoutBtn}
-          onClick={handleLogout}
-          alt="Desejar sair?"
-        >
+        <button className={styles.logoutBtn} onClick={handleLogout}>
           <RiLogoutBoxLine /> Sair
         </button>
 
