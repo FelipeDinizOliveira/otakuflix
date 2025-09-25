@@ -9,10 +9,26 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
-app.use(cors());
+
+// =======================
+// CORS configurado para o front hospedado no Vercel
+// =======================
+app.use(
+  cors({
+    origin: [
+      "https://otakuflix-two.vercel.app", // domínio do front
+      "http://localhost:5173", // opcional: front local durante desenvolvimento
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+
 app.use(express.json());
 
-// Middleware
+// =======================
+// Middleware de autenticação
+// =======================
 function checkToken(req, res, next) {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
@@ -25,22 +41,15 @@ function checkToken(req, res, next) {
   }
 }
 
-// Rotas
+// =======================
+// Rotas públicas
+// =======================
 app.get("/", (req, res) => res.status(200).json({ msg: "Iniciando API!" }));
 
-app.get("/user/:id", checkToken, async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id, "-password");
-    if (!user) return res.status(404).json({ msg: "Usuário não encontrado!" });
-    res.status(200).json({ user });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ msg: "Erro no servidor!" });
-  }
-});
-
+// Registro de usuário
 app.post("/auth/register", async (req, res) => {
   const { name, email, password, confirmpassword } = req.body;
+
   if (!name || !email || !password || password !== confirmpassword)
     return res.status(422).json({ msg: "Dados inválidos!" });
 
@@ -58,8 +67,10 @@ app.post("/auth/register", async (req, res) => {
   }
 });
 
+// Login
 app.post("/auth/login", async (req, res) => {
   const { email, password } = req.body;
+
   if (!email || !password)
     return res.status(422).json({ msg: "Dados inválidos!" });
 
@@ -70,7 +81,9 @@ app.post("/auth/login", async (req, res) => {
     const checkPassword = await bcrypt.compare(password, user.password);
     if (!checkPassword) return res.status(401).json({ msg: "Senha inválida!" });
 
-    const token = jwt.sign({ id: user._id }, process.env.SECRET);
+    const token = jwt.sign({ id: user._id }, process.env.SECRET, {
+      expiresIn: "1h",
+    });
     res.status(200).json({ msg: "Autenticação realizada com sucesso!", token });
   } catch (err) {
     console.log(err);
@@ -78,7 +91,21 @@ app.post("/auth/login", async (req, res) => {
   }
 });
 
-// Conexão MongoDB + server
+// Rota privada: buscar usuário por ID
+app.get("/user/:id", checkToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id, "-password");
+    if (!user) return res.status(404).json({ msg: "Usuário não encontrado!" });
+    res.status(200).json({ user });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ msg: "Erro no servidor!" });
+  }
+});
+
+// =======================
+// Conexão MongoDB + start server
+// =======================
 const PORT = process.env.PORT || 3000;
 
 mongoose
@@ -86,6 +113,7 @@ mongoose
     `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.3rshl4g.mongodb.net/?retryWrites=true&w=majority`
   )
   .then(() => {
+    console.log("Conectado ao MongoDB");
     app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
   })
   .catch((err) => console.log("Erro ao conectar no MongoDB:", err));
