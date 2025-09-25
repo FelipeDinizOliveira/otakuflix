@@ -16,11 +16,14 @@ export function SignUp() {
     const userData = { name, email, password, confirmpassword };
 
     try {
-      const response = await fetch("http://localhost:3000/auth/register", {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userData),
-      });
+      const response = await fetch(
+        "https://otakuflix-q1qv.vercel.app/auth/register",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(userData),
+        }
+      );
 
       const data = await response.json();
       setMessage(data.msg);
