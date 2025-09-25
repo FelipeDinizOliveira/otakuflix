@@ -17,12 +17,10 @@ export function UserPage() {
   const [currentChapterIndex, setCurrentChapterIndex] = useState(0);
   const [pages, setPages] = useState([]);
 
-  const apiUrl = "http://localhost:3000"; // backend de usuário
-  const proxyMangas = "/api/mangas"; // proxy mangás
-  const proxyChapters = "/api/manga-chapters"; // proxy capítulos
-  const proxyPages = "/api/manga-pages"; // proxy páginas
+  const baseUrl = "https://api.mangadex.org";
+  const apiUrl = "http://localhost:3000"; // URL backend
 
-  // Dados do usuário JWT
+  // Dados do usuário  JWT e rota /user/:id
   useEffect(() => {
     const fetchUser = async () => {
       const token = localStorage.getItem("token");
@@ -64,15 +62,14 @@ export function UserPage() {
     window.location.href = "/";
   };
 
-  // Busca mangás via proxy
+  // Busca api manga
   const fetchMangas = async (title) => {
     try {
-      const response = await axios.get(proxyMangas, { params: { title } });
+      const response = await axios.get(`${baseUrl}/manga`, {
+        params: { title, limit: 4, includes: ["cover_art"] },
+      });
 
-      // ⚠️ Checagem de segurança
-      const mangasArray = response.data?.data || [];
-
-      const mangasData = mangasArray.map((m) => {
+      const mangasData = response.data.data.map((m) => {
         const coverRel = m.relationships.find((r) => r.type === "cover_art");
         const coverUrl = coverRel
           ? `https://uploads.mangadex.org/covers/${m.id}/${coverRel.attributes.fileName}.256.jpg`
@@ -109,7 +106,7 @@ export function UserPage() {
     return () => clearTimeout(timeout);
   }, [searchTerm]);
 
-  // Modal e leitor
+  //  Modal e leitor
   const openModal = (manga) => {
     setSelectedManga(manga);
     setModalOpen(true);
@@ -128,18 +125,18 @@ export function UserPage() {
 
   const fetchChapters = async (mangaId) => {
     try {
-      const response = await axios.get(`${proxyChapters}/${mangaId}`);
-      const chapterList = response.data?.data || [];
+      const response = await axios.get(`${baseUrl}/manga/${mangaId}/feed`, {
+        params: { limit: 10, order: { chapter: "asc" } },
+      });
 
-      const formattedChapters = chapterList.map((c) => ({
+      const chapterList = response.data.data.map((c) => ({
         id: c.id,
         title: c.attributes.title || `Capítulo ${c.attributes.chapter}`,
         chapter: c.attributes.chapter,
       }));
 
-      setChapters(formattedChapters);
-
-      if (formattedChapters.length > 0) fetchPages(formattedChapters[0].id);
+      setChapters(chapterList);
+      if (chapterList.length > 0) fetchPages(chapterList[0].id);
     } catch (err) {
       console.error("Erro ao buscar capítulos:", err);
     }
@@ -147,11 +144,12 @@ export function UserPage() {
 
   const fetchPages = async (chapterId) => {
     try {
-      const response = await axios.get(`${proxyPages}/${chapterId}`);
-      const baseUrlServer = response.data?.baseUrl;
-      const hash = response.data?.chapter?.hash;
-      const data = response.data?.chapter?.data || [];
-
+      const response = await axios.get(
+        `${baseUrl}/at-home/server/${chapterId}`
+      );
+      const baseUrlServer = response.data.baseUrl;
+      const hash = response.data.chapter.hash;
+      const data = response.data.chapter.data;
       const fullUrls = data.map(
         (img) => `${baseUrlServer}/data/${hash}/${img}`
       );
@@ -169,8 +167,13 @@ export function UserPage() {
   return (
     <>
       <header className={styles.head}>
-        <button className={styles.logoutBtn} onClick={handleLogout}>
-          <RiLogoutBoxLine /> Sair
+        <button
+          className={styles.logoutBtn}
+          onClick={handleLogout}
+          alt="Desejar sair?"
+        >
+          <RiLogoutBoxLine />
+          Sair
         </button>
 
         <span>
@@ -181,7 +184,6 @@ export function UserPage() {
           <p>Email: {user.email}</p>
         </div>
       </header>
-
       <div className={modalOpen ? styles.userPageBlur : styles.userPage}>
         <section id={styles.wrapperSearch}>
           <input
@@ -216,7 +218,6 @@ export function UserPage() {
           </div>
         </section>
       </div>
-
       {modalOpen && selectedManga && (
         <div className={styles.modalOverlay} onClick={closeModal}>
           <div
@@ -257,7 +258,7 @@ export function UserPage() {
                       fetchPages(chapters[currentChapterIndex + 1].id)
                     }
                   >
-                    Próximo capítulo.
+                    Próximo capítulo
                   </button>
                 </div>
                 <div className={styles.pagesContainer}>
@@ -273,7 +274,10 @@ export function UserPage() {
               </>
             )}
             <button className={styles.closeButton} onClick={closeModal}>
-              <IoCloseCircle />
+              <i>
+                {" "}
+                <IoCloseCircle />{" "}
+              </i>
             </button>
           </div>
         </div>
