@@ -17,10 +17,10 @@ export function UserPage() {
   const [currentChapterIndex, setCurrentChapterIndex] = useState(0);
   const [pages, setPages] = useState([]);
 
-  const baseUrl = "https://api.mangadex.org";
   const apiUrl = "http://localhost:3000"; // URL backend
+  const serverlessUrl = "/api/manga"; // Função serverless no Vercel
 
-  // Dados do usuário  JWT e rota /user/:id
+  // Dados do usuário JWT e rota /user/:id
   useEffect(() => {
     const fetchUser = async () => {
       const token = localStorage.getItem("token");
@@ -62,11 +62,11 @@ export function UserPage() {
     window.location.href = "/";
   };
 
-  // Busca api manga
+  // Busca mangas usando função serverless para evitar CORS
   const fetchMangas = async (title) => {
     try {
-      const response = await axios.get(`${baseUrl}/manga`, {
-        params: { title, limit: 4, includes: ["cover_art"] },
+      const response = await axios.get(serverlessUrl, {
+        params: { title, limit: 4 },
       });
 
       const mangasData = response.data.data.map((m) => {
@@ -106,7 +106,7 @@ export function UserPage() {
     return () => clearTimeout(timeout);
   }, [searchTerm]);
 
-  //  Modal e leitor
+  // Modal e leitor
   const openModal = (manga) => {
     setSelectedManga(manga);
     setModalOpen(true);
@@ -125,7 +125,7 @@ export function UserPage() {
 
   const fetchChapters = async (mangaId) => {
     try {
-      const response = await axios.get(`${baseUrl}/manga/${mangaId}/feed`, {
+      const response = await axios.get(`${serverlessUrl}/${mangaId}/feed`, {
         params: { limit: 10, order: { chapter: "asc" } },
       });
 
@@ -145,7 +145,7 @@ export function UserPage() {
   const fetchPages = async (chapterId) => {
     try {
       const response = await axios.get(
-        `${baseUrl}/at-home/server/${chapterId}`
+        `${serverlessUrl}/at-home/server/${chapterId}`
       );
       const baseUrlServer = response.data.baseUrl;
       const hash = response.data.chapter.hash;
@@ -275,8 +275,7 @@ export function UserPage() {
             )}
             <button className={styles.closeButton} onClick={closeModal}>
               <i>
-                {" "}
-                <IoCloseCircle />{" "}
+                <IoCloseCircle />
               </i>
             </button>
           </div>
