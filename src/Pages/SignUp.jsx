@@ -1,48 +1,32 @@
 import { useState } from "react";
 import { SubmitButton } from "../components/SubmitButton";
 import background from "../assets/background-animes.png";
-import styles from "./SignUp.module.css";
-import { useNavigate } from "react-router-dom";
+import styles from "../Pages/SignUp.module.css";
 
 export function SignUp() {
-  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmpassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setMessage("");
 
     const userData = { name, email, password, confirmpassword };
 
     try {
-      const response = await fetch(
-        "https://otakuflix-backend.onrender.com/auth/register",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(userData),
-        }
-      );
+      const response = await fetch("http://localhost:3000/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userData),
+      });
 
       const data = await response.json();
-
-      if (response.ok) {
-        setMessage("Cadastro realizado com sucesso!");
-        setTimeout(() => navigate("/"), 1500); // redireciona após 1,5s
-      } else {
-        setMessage(data.msg || "Erro ao cadastrar usuário");
-      }
+      setMessage(data.msg);
     } catch (err) {
       console.error("Erro no fetch:", err);
       setMessage("Erro ao conectar com o servidor");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -63,6 +47,7 @@ export function SignUp() {
               className={styles.inputField}
               required
             />
+
             <input
               type="email"
               placeholder="Digite seu email"
@@ -71,6 +56,7 @@ export function SignUp() {
               className={styles.inputField}
               required
             />
+
             <input
               type="password"
               placeholder="Digite sua senha"
@@ -79,6 +65,7 @@ export function SignUp() {
               className={styles.inputField}
               required
             />
+
             <input
               type="password"
               placeholder="Confirme sua senha"
@@ -95,10 +82,7 @@ export function SignUp() {
             </p>
           </span>
 
-          <SubmitButton
-            type="submit"
-            label={loading ? "Cadastrando..." : "Cadastrar"}
-          />
+          <SubmitButton type="submit" label="Cadastrar" />
           {message && <p id="StatusMsg">{message}</p>}
         </form>
       </section>

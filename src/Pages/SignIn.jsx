@@ -19,20 +19,19 @@ export function SignIn() {
     const loginData = { email, password };
 
     try {
-      // ❌ localhost substituído pela URL do Render
-      const response = await fetch(
-        "https://otakuflix-backend.onrender.com/auth/login",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(loginData),
-        }
-      );
+      const response = await fetch("http://localhost:3000/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(loginData),
+      });
 
       const data = await response.json();
 
       if (response.ok) {
+        // salva o token
         localStorage.setItem("token", data.token);
+
+        // redireciona para página do usuário
         navigate(`/user`);
       } else {
         setMessage(data.msg || "Erro ao fazer login");
