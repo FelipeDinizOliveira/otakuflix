@@ -2,7 +2,7 @@ import { useState } from "react";
 import styles from "./SignIn.module.css";
 import { SubmitButton } from "../components/SubmitButton";
 import background from "../assets/background-animes.png";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export function SignIn() {
   const navigate = useNavigate();
@@ -82,12 +82,10 @@ export function SignIn() {
         </form>
 
         <footer>
-          <p>
+          <Link to="/signup" className={styles.footer}>
             Ainda não possui conta?
-            <strong>
-              <a href="/signup"> Cadastre-se </a>
-            </strong>
-          </p>
+            <strong>Cadastre-se</strong>
+          </Link>
         </footer>
       </section>
 

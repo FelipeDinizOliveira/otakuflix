@@ -25,6 +25,16 @@
   align-items: center;
 }
 
+.footer {
+  display: flex;
+  gap: 0.2rem;
+  color: white;
+}
+
+.footer strong {
+  color: var(--accent-color) !important;
+}
+
 .loginForm {
   display: flex;
   flex-direction: column;

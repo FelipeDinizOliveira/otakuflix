@@ -45,7 +45,9 @@ export function UserPage() {
 
       try {
         const response = await axios.get(`${apiUrl}/user/${userId}`, {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         });
         setUser(response.data.user);
       } catch (err) {
@@ -67,6 +69,10 @@ export function UserPage() {
     try {
       const response = await axios.get(`${baseUrl}/manga`, {
         params: { title, limit: 4, includes: ["cover_art"] },
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
       });
 
       const mangasData = response.data.data.map((m) => {
