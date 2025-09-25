@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { SubmitButton } from "../components/SubmitButton";
 import background from "../assets/background-animes.png";
-import styles from "../Pages/signUp.module.css";
+import styles from "../Pages/SignUp.module.css";
 
 export function SignUp() {
   const [name, setName] = useState("");
