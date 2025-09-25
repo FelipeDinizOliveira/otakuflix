@@ -17,10 +17,12 @@ export function UserPage() {
   const [currentChapterIndex, setCurrentChapterIndex] = useState(0);
   const [pages, setPages] = useState([]);
 
-  const baseUrl = "https://api.mangadex.org";
-  const apiUrl = "http://localhost:3000"; // URL backend
+  const apiUrl = "http://localhost:3000"; // seu backend de usuário
+  const proxyMangas = "/api/mangas"; // proxy mangás
+  const proxyChapters = "/api/manga-chapters"; // proxy capítulos
+  const proxyPages = "/api/manga-pages"; // proxy páginas
 
-  // Dados do usuário  JWT e rota /user/:id
+  // Dados do usuário JWT e rota /user/:id
   useEffect(() => {
     const fetchUser = async () => {
       const token = localStorage.getItem("token");
@@ -62,12 +64,10 @@ export function UserPage() {
     window.location.href = "/";
   };
 
-  // Busca api manga
+  // Busca mangás via proxy
   const fetchMangas = async (title) => {
     try {
-      const response = await axios.get(`${baseUrl}/manga`, {
-        params: { title, limit: 4, includes: ["cover_art"] },
-      });
+      const response = await axios.get(proxyMangas, { params: { title } });
 
       const mangasData = response.data.data.map((m) => {
         const coverRel = m.relationships.find((r) => r.type === "cover_art");
@@ -106,7 +106,7 @@ export function UserPage() {
     return () => clearTimeout(timeout);
   }, [searchTerm]);
 
-  //  Modal e leitor
+  // Modal e leitor
   const openModal = (manga) => {
     setSelectedManga(manga);
     setModalOpen(true);
@@ -125,10 +125,7 @@ export function UserPage() {
 
   const fetchChapters = async (mangaId) => {
     try {
-      const response = await axios.get(`${baseUrl}/manga/${mangaId}/feed`, {
-        params: { limit: 10, order: { chapter: "asc" } },
-      });
-
+      const response = await axios.get(`${proxyChapters}/${mangaId}`);
       const chapterList = response.data.data.map((c) => ({
         id: c.id,
         title: c.attributes.title || `Capítulo ${c.attributes.chapter}`,
@@ -144,9 +141,7 @@ export function UserPage() {
 
   const fetchPages = async (chapterId) => {
     try {
-      const response = await axios.get(
-        `${baseUrl}/at-home/server/${chapterId}`
-      );
+      const response = await axios.get(`${proxyPages}/${chapterId}`);
       const baseUrlServer = response.data.baseUrl;
       const hash = response.data.chapter.hash;
       const data = response.data.chapter.data;
@@ -172,8 +167,7 @@ export function UserPage() {
           onClick={handleLogout}
           alt="Desejar sair?"
         >
-          <RiLogoutBoxLine />
-          Sair
+          <RiLogoutBoxLine /> Sair
         </button>
 
         <span>
@@ -184,6 +178,7 @@ export function UserPage() {
           <p>Email: {user.email}</p>
         </div>
       </header>
+
       <div className={modalOpen ? styles.userPageBlur : styles.userPage}>
         <section id={styles.wrapperSearch}>
           <input
@@ -218,6 +213,7 @@ export function UserPage() {
           </div>
         </section>
       </div>
+
       {modalOpen && selectedManga && (
         <div className={styles.modalOverlay} onClick={closeModal}>
           <div
@@ -274,10 +270,7 @@ export function UserPage() {
               </>
             )}
             <button className={styles.closeButton} onClick={closeModal}>
-              <i>
-                {" "}
-                <IoCloseCircle />{" "}
-              </i>
+              <IoCloseCircle />
             </button>
           </div>
         </div>
