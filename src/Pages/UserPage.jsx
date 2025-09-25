@@ -257,7 +257,7 @@ export function UserPage() {
                       fetchPages(chapters[currentChapterIndex + 1].id)
                     }
                   >
-                    Próximo capítulo
+                    Próximo capítulo.
                   </button>
                 </div>
                 <div className={styles.pagesContainer}>
